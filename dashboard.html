@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수업 보고서 대시보드 (교사용)</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;background:#EEF2F5;color:#1B2A38;line-height:1.6;
+ font-family:'맑은 고딕','Malgun Gothic',system-ui,sans-serif;}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 18px 70px;}
+
+/* 로그인 */
+.mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+ padding:20px;background:#EEF2F5;z-index:50;}
+.login{background:#fff;border-radius:18px;box-shadow:0 12px 34px rgba(0,0,0,.10);
+ padding:32px 28px;max-width:430px;width:100%;}
+.login h1{font-size:21px;margin:0 0 4px;} .login p{font-size:13.5px;color:#667;margin:0 0 20px;}
+label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px;}
+input,select{width:100%;padding:12px;border:1.5px solid #CFD8DE;border-radius:10px;
+ font-size:15px;font-family:inherit;background:#FBFCFD;}
+input:focus,select:focus{outline:none;border-color:#065A82;}
+.err{color:#C4453B;font-size:13px;font-weight:600;min-height:18px;margin:10px 0 2px;}
+button{border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+.primary{background:#065A82;color:#fff;padding:13px 20px;font-size:15px;width:100%;}
+.ghost{background:#fff;color:#5A6674;border:1.5px solid #CFD8DE;padding:8px 14px;font-size:13px;}
+
+/* 헤더 */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.top h1{font-size:20px;margin:0;} .top .meta{font-size:12px;color:#8A96A3;}
+.card{background:#fff;border:1px solid #E1E7EB;border-radius:16px;padding:18px 20px;margin-bottom:16px;}
+
+/* 선택 */
+.sel{display:flex;gap:14px;flex-wrap:wrap;}
+.sel>div{flex:1;min-width:190px;}
+
+/* 학생 헤더 */
+.stu{background:linear-gradient(120deg,#0F3D73,#1D6FE0);color:#fff;border-radius:16px;
+ padding:20px 24px;margin-bottom:16px;display:flex;justify-content:space-between;
+ align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.stu .nm{font-size:23px;font-weight:800;}
+.stu .sub{font-size:12.5px;opacity:.88;margin-top:3px;}
+.stu .rt{text-align:right;font-size:12px;opacity:.9;}
+.stu .rt b{display:block;font-size:19px;font-weight:800;}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:820px){.two{grid-template-columns:1fr;}}
+.sec{font-size:13px;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+.mini{border:1px solid #E1E7EB;border-radius:11px;padding:11px 13px;margin-bottom:9px;}
+.mini .t{font-size:11.5px;font-weight:800;margin-bottom:3px;} .mini .v{font-size:13px;}
+.box{border-radius:12px;padding:15px 17px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;word-break:break-word;}
+.b-blue{background:#EAF1FC;border:1px solid #CFE0F7;color:#12345c;}
+.b-green{background:#E6F4EC;border:1px solid #BFE3CE;color:#14603f;}
+.b-purple{background:#F3EDFB;border:1px solid #DECBF3;color:#40206e;}
+.ph{border:1.5px dashed #CFD8DE;border-radius:12px;padding:16px;text-align:center;color:#8A96A3;font-size:13px;background:#FBFCFD;}
+.kv{margin-bottom:12px;} .kv .k{font-size:11.5px;font-weight:800;color:#065A82;margin-bottom:2px;}
+.kv .v{font-size:13.5px;white-space:pre-wrap;word-break:break-word;}
+.kv .v.em{color:#8A96A3;font-style:italic;}
+.imgcol{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 30px);overflow-y:auto;}
+figure{margin:0 0 14px;}
+figcaption{font-size:12px;font-weight:800;color:#5A6674;margin-bottom:6px;display:flex;justify-content:space-between;}
+figcaption a{color:#065A82;font-size:11px;text-decoration:none;}
+figure img{width:100%;border-radius:11px;border:1px solid #E1E7EB;display:block;background:#F7F9FB;}
+.fail{display:none;font-size:12.5px;color:#8A96A3;border:1.5px dashed #CFD8DE;border-radius:11px;padding:14px;text-align:center;}
+figure.bad img{display:none;} figure.bad .fail{display:block;}
+.hint{text-align:center;color:#8A96A3;padding:40px 0;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="mask" id="mask">
+  <div class="login">
+    <h1>📊 수업 보고서 대시보드</h1>
+    <p>교사용 화면입니다. 아래 두 가지를 입력하세요.</p>
+    <label>앱스크립트 웹앱 주소 (.../exec)</label>
+    <input type="url" id="inUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <label>대시보드 암호</label>
+    <input type="password" id="inPw" placeholder="Code.gs 의 DASHBOARD_PW 값"
+           onkeydown="if(event.key==='Enter')open_()">
+    <div class="err" id="err"></div>
+    <button class="primary" id="go" onclick="open_()">대시보드 열기</button>
+    <p style="margin-top:14px;font-size:12px;color:#8A96A3;line-height:1.6;">
+      · 주소는 이 브라우저에 저장돼 다음부터 자동 입력됩니다.<br>· 암호는 저장되지 않습니다.</p>
+  </div>
+</div>
+
+<div class="wrap" id="dash" style="display:none">
+  <div class="top">
+    <div><h1>📊 수업 보고서 대시보드</h1><div class="meta" id="meta"></div></div>
+    <div style="display:flex;gap:8px">
+      <button class="ghost" onclick="reload_()">↻ 새로고침</button>
+      <button class="ghost" onclick="location.reload()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="card sel">
+    <div><label>반</label><select id="selC" onchange="onC()"><option value="">반 선택</option></select></div>
+    <div><label>번호 · 이름</label><select id="selN" onchange="onN()" disabled><option value="">번호 선택</option></select></div>
+  </div>
+
+  <div id="view"><div class="hint">반과 번호를 선택하면 학생 보고서가 나타납니다.</div></div>
+</div>
+
+<script>
+const LS='dash_url_v1';
+let URL_='', PW='', ROWS=[], STU=[];
+
+function jsonp(p){return new Promise((ok,no)=>{const cb='cb'+Math.random().toString(36).slice(2);
+ const s=document.createElement('script');const t=setTimeout(()=>{c();no(new Error('시간 초과'))},60000);
+ function c(){try{delete window[cb]}catch(e){} s.remove(); clearTimeout(t)}
+ window[cb]=d=>{ok(d);c()}; s.onerror=()=>{c();no(new Error('네트워크 오류'))};
+ s.src=URL_+'?'+Object.entries(p).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&')+'&callback='+cb;
+ document.body.appendChild(s)})}
+
+window.addEventListener('DOMContentLoaded',()=>{const v=localStorage.getItem(LS); if(v) inUrl.value=v;});
+
+async function open_(){
+  const u=inUrl.value.trim(), p=inPw.value; err.textContent='';
+  if(!u){err.textContent='웹앱 주소를 입력하세요.';return;}
+  if(!p){err.textContent='암호를 입력하세요.';return;}
+  URL_=u; PW=p; go.disabled=true; go.textContent='불러오는 중...';
+  try{
+    const r=await jsonp({action:'dashboard',pw:PW});
+    if(r&&r.ok){ localStorage.setItem(LS,u); ROWS=r.rows||[];
+      mask.style.display='none'; dash.style.display='block';
+      meta.textContent='마지막 갱신: '+(r.generatedAt||'-')+' · 제출 '+ROWS.length+'명';
+      build_(); fillC(); }
+    else if(r&&r.error==='AUTH') err.textContent='암호가 올바르지 않습니다.';
+    else err.textContent='데이터를 불러오지 못했습니다.';
+  }catch(e){ err.textContent='연결 실패: '+(e.message||e); }
+  finally{ go.disabled=false; go.textContent='대시보드 열기'; }
+}
+async function reload_(){ try{const r=await jsonp({action:'dashboard',pw:PW});
+  if(r&&r.ok){ROWS=r.rows||[]; meta.textContent='마지막 갱신: '+(r.generatedAt||'-')+' · 제출 '+ROWS.length+'명';
+  const keep=selN.value; build_(); fillC(); if(keep!==''){selN.value=keep; onN();}}}catch(e){alert('새로고침 실패')} }
+
+/* 학번 1408 → 4반 8번 (같은 학생은 최신 제출만) */
+function build_(){
+  const map={};
+  ROWS.forEach(r=>{ map[String(r.sid)+'|'+String(r.name)]=r; });
+  STU=Object.values(map).map(r=>{
+    const id=String(r.sid||'').replace(/[^0-9]/g,'');
+    r.cls = id.length>=3 ? +id[id.length-3] : 0;
+    r.num = id.length>=2 ? +id.slice(-2) : 0;
+    return r;
+  });
+}
+function fillC(){
+  const cs=[...new Set(STU.map(s=>s.cls))].filter(c=>c>0).sort((a,b)=>a-b);
+  selC.innerHTML='<option value="">반 선택</option>'+cs.map(c=>
+    `<option value="${c}">${c}반 (${STU.filter(s=>s.cls===c).length}명)</option>`).join('');
+  selN.innerHTML='<option value="">번호 선택</option>'; selN.disabled=true;
+  view.innerHTML='<div class="hint">반과 번호를 선택하면 학생 보고서가 나타납니다.</div>';
+}
+function onC(){
+  const c=+selC.value;
+  view.innerHTML='<div class="hint">번호를 선택하면 학생 보고서가 나타납니다.</div>';
+  if(!c){ selN.innerHTML='<option value="">번호 선택</option>'; selN.disabled=true; return; }
+  const list=STU.map((s,i)=>({s,i})).filter(o=>o.s.cls===c).sort((a,b)=>a.s.num-b.s.num);
+  selN.innerHTML='<option value="">번호 선택</option>'+list.map(o=>
+    `<option value="${o.i}">${o.s.num}번 · ${esc(o.s.name)}${(o.s.saengteuk||o.s.total)?' ●':''}</option>`).join('');
+  selN.disabled=false;
+}
+function onN(){ if(selN.value==='') return; show(STU[+selN.value]); }
+
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function has(t){const v=String(t||'').trim(); return v && v.indexOf('[생성 실패]')!==0 && v.indexOf('[채점')!==0;}
+function driveId(u){const m=String(u||'').match(/\/d\/([\w-]+)/)||String(u||'').match(/[?&]id=([\w-]+)/);return m?m[1]:null}
+function fig(label,url){ const u=String(url||'').split('\n')[0].trim(); if(!u) return '';
+  const id=driveId(u), src=id?('https://drive.google.com/thumbnail?id='+id+'&sz=w1600'):u,
+        op=id?('https://drive.google.com/file/d/'+id+'/view'):u;
+  return `<figure><figcaption>${label}<a href="${esc(op)}" target="_blank">원본 ↗</a></figcaption>
+    <a href="${esc(op)}" target="_blank"><img loading="lazy" src="${esc(src)}"
+      onerror="this.closest('figure').classList.add('bad')"></a>
+    <div class="fail">이미지를 바로 표시할 수 없어요 · <a href="${esc(op)}" target="_blank">원본 열기 ↗</a></div></figure>`;
+}
+function kv(k,v){return `<div class="kv"><div class="k">${k}</div>${
+  (v&&String(v).trim())?`<div class="v">${esc(v)}</div>`:`<div class="v em">(작성 안 함)</div>`}</div>`}
+function box(cls,txt,msg){ return has(txt)?`<div class="box ${cls}">${esc(txt)}</div>`
+  : `<div class="ph">${String(txt||'').trim()? esc(txt) : msg}</div>` }
+
+function show(s){
+  const st=(t,ok,color)=>`<div class="mini" style="background:${ok?color[0]:'#FBFCFD'};border-color:${ok?color[1]:'#E1E7EB'}">
+      <div class="t" style="color:${color[2]}">${t}</div><div class="v">${ok?'생성됨':'미생성'}</div></div>`;
+  view.innerHTML=`
+    <div class="stu">
+      <div><div class="nm">${esc(s.name||'')}</div>
+        <div class="sub">${s.cls}반 ${s.num}번 · 학번 ${esc(s.sid)}</div>
+        <div class="sub">제출: ${esc(String(s.submittedAt).replace(/:\d{2}$/,''))}</div></div>
+      <div class="rt"><b>${has(s.total)?esc(s.total):'–'}</b>모의 총점</div>
+    </div>
+
+    <div class="card">
+      <div class="sec">📋 생성 상태</div>
+      ${st('🧮 모의채점', has(s.total), ['#F3EDFB','#DECBF3','#6C3CB0'])}
+      ${st('📄 세특',     has(s.saengteuk), ['#EAF1FC','#CFE0F7','#0F3D73'])}
+      ${st('💬 피드백',   has(s.feedback), ['#E6F4EC','#BFE3CE','#178A5A'])}
+    </div>
+
+    <div class="card"><div class="sec" style="color:#6C3CB0">🧮 모의채점 <span style="color:#8A96A3;font-weight:600">(교사용 · 참고, 최종은 교사 판단)</span></div>
+      ${box('b-purple', s.detail, '아직 생성되지 않았어요. (시트 메뉴 → 실패·빈 칸 모두 채우기)')}</div>
+
+    <div class="card"><div class="sec" style="color:#0F3D73">📄 세특 <span style="color:#8A96A3;font-weight:600">(교사용)</span></div>
+      ${box('b-blue', s.saengteuk, '아직 생성되지 않았어요.')}</div>
+
+    <div class="card"><div class="sec" style="color:#178A5A">💬 학생 피드백</div>
+      ${box('b-green', s.feedback, '아직 생성되지 않았어요.')}</div>
+
+    <div class="card"><div class="sec">📝 작성 내용 &amp; 제출 이미지</div>
+      <div class="two">
+        <div>${kv('이름 · 학번', s.name+' · '+s.sid)}${kv('그림 설명', s.desc)}
+          ${s.link?`<div style="margin-top:12px"><a href="${esc(s.link)}" target="_blank"
+            style="font-size:12.5px;font-weight:700;color:#065A82">학생 화면으로 열기 ↗</a></div>`:''}</div>
+        <div class="imgcol">${ s.imgUrl? fig('🖼️ 제출한 그림', s.imgUrl) : '<div class="ph">제출한 이미지가 없어요.</div>' }</div>
+      </div>
+    </div>`;
+  view.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
